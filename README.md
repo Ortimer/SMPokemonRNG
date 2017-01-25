@@ -1,31 +1,11 @@
 # SMHatchingRNGTool
 
-[![Build status](https://ci.appveyor.com/api/projects/status/github/Quandra/smhatchingrngtool?branch=master&svg=true)](https://ci.appveyor.com/project/Quandra/smhatchingrngtool)
-
-The Pokemon SunMoon Hatching RNG Tool
+A vile copy of the Pokemon SunMoon Hatching RNG Tool
 
 ## Description
-This is the Pokemon SunMoon Hatching RNG Tool.
+This is a modification of the Pokemon SunMoon Hatching RNG Tool.
+You can find the original one at...
+https://github.com/Quandra/SMHatchingRNGTool
 
-##注意事項
-本ソフトの使用により何らかのトラブルが発生しても、作者は一切の責任を負いません。
-また、バグにより出力結果が間違っている可能性があります。  
-
-## Contact 
-バグ等がありましたら、Twitter(@quan_dra)にでもよろしくお願いします。 
-要望は受け付けます。
-
-## Author
+## Author of the original tool
 [@quan_dra](https://twitter.com/quan_dra)
-
-
-##使用ライブラリ
-
-#### [TinyMT](https://github.com/MersenneTwister-Lab/TinyMT)
-
-> The BSD 3-Clause License
-> 
-> Copyright (c) 2011, 2013 Mutsuo Saito, Makoto Matsumoto, Hiroshima University and The University of Tokyo.
-
-* **ライセンス :** The BSD 3-Clause License
-* **ライセンス全文 :** [licenses/TinyMT.txt](licenses/TinyMT.txt)
