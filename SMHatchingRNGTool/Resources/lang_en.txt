@@ -29,7 +29,7 @@ Menu_About = About
 mnuCopy = Copy
 mnuSelectAll = Select All
 mnuSetSearchSeed = Copy seed to this tab
-mnuSetEggSeed = Copy seed to other tab
+mnu2SetSearchSeed = Copy seed to other tab
 mnu2Copy = Copy
 mnu2SelectAll = Select All
 ---------------------Search Tab------------------------

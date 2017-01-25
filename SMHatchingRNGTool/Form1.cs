@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using static PKHeX.Util;
+using Priority_Queue;
 
 namespace SMHatchingRNGTool
 {
@@ -258,7 +259,10 @@ namespace SMHatchingRNGTool
                 Error(msgstr[9]);
             else
                 search();
-        }
+                EggList_search();
+                EggList_cal_target();
+                EggList_cal_target_optimal();
+    }
 
         private void search()
         {
@@ -299,33 +303,6 @@ namespace SMHatchingRNGTool
             k_dataGridView.CurrentCell = null;
         }
 
-        private void List_search_Click(object sender, EventArgs e)
-        {
-            if (s_min.Value > s_max.Value)
-                Error(msgstr[0]);
-            else if (IVlow1.Value > IVup1.Value)
-                Error(msgstr[1]);
-            else if (IVlow2.Value > IVup2.Value)
-                Error(msgstr[2]);
-            else if (IVlow3.Value > IVup3.Value)
-                Error(msgstr[3]);
-            else if (IVlow4.Value > IVup4.Value)
-                Error(msgstr[4]);
-            else if (IVlow5.Value > IVup5.Value)
-                Error(msgstr[5]);
-            else if (IVlow6.Value > IVup6.Value)
-                Error(msgstr[6]);
-            else if (0 > TSV.Value || TSV.Value > 4095)
-				Error("TSV" + msgstr[7]);
-            else if (sex_ratio.SelectedIndex == 6 && !(post_ditto.Checked || pre_ditto.Checked))
-                Error(msgstr[8]);
-            else if (sex_ratio.SelectedIndex == 6 && pre_ditto.Checked)
-                Error(msgstr[9]);
-            else
-                EggList_search();
-                EggList_cal_target();
-        }
-
         private void EggList_search()
         {
             int min = (int)n_min.Value;
@@ -333,10 +310,10 @@ namespace SMHatchingRNGTool
 
             uint[] st =
             {
-                (uint)L_status0a.Value,
-                (uint)L_status1a.Value,
-                (uint)L_status2a.Value,
-                (uint)L_status3a.Value,
+                (uint)status0.Value,
+                (uint)status1.Value,
+                (uint)status2.Value,
+                (uint)status3.Value,
             };
 
             uint[] status = { st[0], st[1], st[2], st[3] };
@@ -392,6 +369,56 @@ namespace SMHatchingRNGTool
             }
         }
 
+    private void EggList_cal_target_optimal() {
+      int target = (int)Target_frame.Value;
+      if (target == 0) {
+        Optimal_Path.Text = "Accept 0 eggs and then reject 0 eggs.";
+        return;
+      }
+
+      List<Node> nodes = new List<Node>();
+      FastPriorityQueue<Node> queue = new FastPriorityQueue<Node>(target + 1);
+      for (int co = 0; co < k_dataGridView.Rows.Count && co <= target; co++) {
+        Node newNode = new Node(co, (int)k_dataGridView[1, co].Value);
+        nodes.Add(newNode);
+        if (co == 0) {
+          newNode.setDistanceToHere(0);
+        }
+        queue.Enqueue(newNode, newNode.getDistanceToHere());
+      }
+
+      Node currentNode;
+      while ((currentNode = queue.Dequeue()).getIndex() != target) {
+        int currentIndex = currentNode.getIndex();
+        List<Node> newPath = new List<Node>(currentNode.getPath());
+        newPath.Add(currentNode);
+
+        // Let's check small step.
+        int smallIndex = currentIndex + 1;
+        if (smallIndex <= target) {
+          Node smallNode = nodes[smallIndex];
+          if (currentNode.getDistanceToHere() + 1 < smallNode.getDistanceToHere()) {
+            smallNode.setDistanceToHere(currentNode.getDistanceToHere() + 1);
+            smallNode.setPath(newPath);
+            queue.UpdatePriority(smallNode, smallNode.getDistanceToHere());
+          }
+        }
+
+        // Let's check jump
+        int jumpIndex = currentIndex + currentNode.getJump();
+        if (jumpIndex <= target) {
+          Node jumpNode = nodes[jumpIndex];
+          if (currentNode.getDistanceToHere() + 1 < jumpNode.getDistanceToHere()) {
+            jumpNode.setDistanceToHere(currentNode.getDistanceToHere() + 1);
+            jumpNode.setPath(newPath);
+            queue.UpdatePriority(jumpNode, jumpNode.getDistanceToHere());
+          }
+        }
+      }
+
+      Optimal_Path.Text = currentNode.getPathDescription();
+    }
+
         private void Form1_Load(object sender, EventArgs e)
         {
             k_dataGridView.DefaultCellStyle.Font = new Font("Consolas", 9);
@@ -411,7 +438,7 @@ namespace SMHatchingRNGTool
 
             foreach (var cbItem in main_langlist)
                 CB_MainLanguage.Items.Add(cbItem);
-            CB_MainLanguage.SelectedIndex = 0;
+            CB_MainLanguage.SelectedIndex = 1;
             changeLanguage(null, null);
 
             pre_Items.SelectedIndex = 0;
@@ -461,10 +488,10 @@ namespace SMHatchingRNGTool
                     Error("TSV"+ msgstr[7]);
                 else
                 {
-                    status3.Value = L_status3a.Value = s3;
-                    status2.Value = L_status2a.Value = s2;
-                    status1.Value = L_status1a.Value = s1;
-                    status0.Value = L_status0a.Value = s0;
+                    status3.Value = s3;
+                    status2.Value = s2;
+                    status1.Value = s1;
+                    status0.Value = s0;
                     TSV.Value = tsv;
                 }
             }
@@ -589,10 +616,10 @@ namespace SMHatchingRNGTool
             {
                 var seed = (string)k_dataGridView.CurrentRow.Cells[2].Value;
                 string[] Data = seed.Split(',');
-                L_status3a.Value = Convert.ToUInt32(Data[0], 16);
-                L_status2a.Value = Convert.ToUInt32(Data[1], 16);
-                L_status1a.Value = Convert.ToUInt32(Data[2], 16);
-                L_status0a.Value = Convert.ToUInt32(Data[3], 16);
+                status3.Value = Convert.ToUInt32(Data[0], 16);
+                status2.Value = Convert.ToUInt32(Data[1], 16);
+                status1.Value = Convert.ToUInt32(Data[2], 16);
+                status0.Value = Convert.ToUInt32(Data[3], 16);
             }
             catch (NullReferenceException)
             {
@@ -617,7 +644,21 @@ namespace SMHatchingRNGTool
             }
         }
 
-        private void L_copyToolStripMenuItem_Click(object sender, EventArgs e)
+    private void SendEggSeed2SearchSeed(object sender, EventArgs e) {
+      try {
+        var seed = (string)L_dataGridView.CurrentRow.Cells[2].Value;
+        string[] Data = seed.Split(',');
+        status3.Value = Convert.ToUInt32(Data[0], 16);
+        status2.Value = Convert.ToUInt32(Data[1], 16);
+        status1.Value = Convert.ToUInt32(Data[2], 16);
+        status0.Value = Convert.ToUInt32(Data[3], 16);
+      }
+      catch (NullReferenceException) {
+        Error(msgstr[19]);
+      }
+    }
+
+    private void L_copyToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
@@ -690,7 +731,7 @@ namespace SMHatchingRNGTool
 
         private void ConsiderTSVcheck(object sender, EventArgs e)
         {
-            k_TSV_shiny.Checked = L_TSV_shiny.Checked = (sender as CheckBox)?.Checked ?? false;
+            k_TSV_shiny.Checked = (sender as CheckBox)?.Checked ?? false;
         }
 
         private void B_TSV_Click(object sender, EventArgs e)
@@ -720,5 +761,39 @@ namespace SMHatchingRNGTool
 		{
 			Close();
 		}
-    }
+
+        private void physicalIVs_Click(object sender, EventArgs e)
+        {
+            IVup1.Value = 31;
+            IVup2.Value = 31;
+            IVup3.Value = 31;
+            IVup4.Value = 31;
+            IVup5.Value = 31;
+            IVup6.Value = 31;
+
+            IVlow1.Value = 31;
+            IVlow2.Value = 31;
+            IVlow3.Value = 31;
+            IVlow4.Value = 0;
+            IVlow5.Value = 31;
+            IVlow6.Value = 31;
+        }
+
+        private void specialIVs_Click(object sender, EventArgs e)
+        {
+            IVup1.Value = 31;
+            IVup2.Value = 31;
+            IVup3.Value = 31;
+            IVup4.Value = 31;
+            IVup5.Value = 31;
+            IVup6.Value = 31;
+
+            IVlow1.Value = 31;
+            IVlow2.Value = 0;
+            IVlow3.Value = 31;
+            IVlow4.Value = 31;
+            IVlow5.Value = 31;
+            IVlow6.Value = 31;
+        }
+  }
 }
