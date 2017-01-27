@@ -56,7 +56,9 @@ namespace SMHatchingRNGTool
         private string STR_PARENT = "親";
         private string STR_ONLY = "のみ";
         private string STR_GENDERLESS = "無性別";
-        #endregion
+    #endregion
+
+    private List<EggRNGSearch.EggRNGResult> eggFrames;
 
         public Form1()
         {
@@ -285,6 +287,7 @@ namespace SMHatchingRNGTool
 
             var setting = getSettings();
             var rng = getRNGSettings();
+            eggFrames = new List<EggRNGSearch.EggRNGResult>();
 
             for (int i = 0; i < min; i++)
                 tiny.nextState();
@@ -293,6 +296,7 @@ namespace SMHatchingRNGTool
                 //statusの更新
                 tiny.status.CopyTo(st, 0);
                 EggRNGSearch.EggRNGResult result = rng.Generate(st);
+                eggFrames.Add(result);        
 
                 if (!frameMatch(result, setting))
                     continue;
@@ -378,8 +382,8 @@ namespace SMHatchingRNGTool
 
       List<Node> nodes = new List<Node>();
       FastPriorityQueue<Node> queue = new FastPriorityQueue<Node>(target + 1);
-      for (int co = 0; co < k_dataGridView.Rows.Count && co <= target; co++) {
-        Node newNode = new Node(co, (int)k_dataGridView[1, co].Value);
+      for (int co = 0; co < eggFrames.Count && co <= target; co++) {
+        Node newNode = new Node(co, eggFrames[co].FramesUsed);
         nodes.Add(newNode);
         if (co == 0) {
           newNode.setDistanceToHere(0);
